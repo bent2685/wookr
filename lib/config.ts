@@ -175,7 +175,8 @@ export async function getPage(slug: string): Promise<Page | null> {
       config.source.branch,
     )
   }
-  const page: Page = { slug: entry.slug, title: entry.title, content: raw }
+  const { content } = matter(raw)
+  const page: Page = { slug: entry.slug, title: entry.title, content }
   cache.set(cacheKey, page)
   return page
 }
