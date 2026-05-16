@@ -1,10 +1,11 @@
-const BASE_URL = 'https://api.github.com'
+const API_BASE = 'https://api.github.com'
+const RAW_BASE = 'https://raw.githubusercontent.com'
 
 function getToken(): string | undefined {
   return process.env.GITHUB_TOKEN
 }
 
-function headers(): HeadersInit {
+function apiHeaders(): HeadersInit {
   const h: HeadersInit = {
     Accept: 'application/vnd.github.v3+json',
     'User-Agent': 'wookr',
@@ -16,8 +17,8 @@ function headers(): HeadersInit {
   return h
 }
 
-async function request<T>(url: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${url}`, { headers: headers() })
+async function apiRequest<T>(url: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${url}`, { headers: apiHeaders() })
   if (!res.ok) {
     throw new Error(`GitHub API error: ${res.status} ${res.statusText} — ${url}`)
   }
@@ -29,13 +30,15 @@ export async function fetchFileContent(
   path: string,
   branch: string,
 ): Promise<string> {
-  const data = await request<{ content: string; encoding: string }>(
-    `/repos/${repo}/contents/${path}?ref=${branch}`,
-  )
-  if (data.encoding === 'base64') {
-    return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8')
+  const url = `${RAW_BASE}/${repo}/${branch}/${path}`
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'wookr' },
+    next: { revalidate: 300 },
+  })
+  if (!res.ok) {
+    throw new Error(`GitHub raw fetch error: ${res.status} ${res.statusText} — ${url}`)
   }
-  return data.content
+  return res.text()
 }
 
 export async function fetchDirectory(
@@ -43,12 +46,12 @@ export async function fetchDirectory(
   path: string,
   branch: string,
 ): Promise<{ name: string; path: string; type: string }[]> {
-  const data = await request<{ name: string; path: string; type: string }[]>(
+  const data = await apiRequest<{ name: string; path: string; type: string }[]>(
     `/repos/${repo}/contents/${path}?ref=${branch}`,
   )
   return data
 }
 
 export function buildRawUrl(repo: string, branch: string, path: string): string {
-  return `https://raw.githubusercontent.com/${repo}/${branch}/${path}`
+  return `${RAW_BASE}/${repo}/${branch}/${path}`
 }

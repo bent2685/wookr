@@ -4,14 +4,8 @@ export interface SiteConfig {
   author: string
 }
 
-export interface SourceConfig {
-  repo: string
-  branch: string
-}
-
 export interface BlogConfig {
   site: SiteConfig
-  source: SourceConfig
   nav: string[]
   posts: {
     per_page: number

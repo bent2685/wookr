@@ -1,47 +1,50 @@
 import { getConfig, getPostsByTag } from '@/lib/config'
 import { notFound } from 'next/navigation'
+import { PageTransition } from '@/components/page-transition'
+import { TagPostList } from './tag-post-list'
+import { Footer } from '@/app/footer'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params
+  const decodedTag = decodeURIComponent(tag)
   const [config, posts] = await Promise.all([
     getConfig(),
-    getPostsByTag(decodeURIComponent(tag)),
+    getPostsByTag(decodedTag),
   ])
   if (posts.length === 0) notFound()
 
   return (
     <main className="min-h-screen">
-      <section className="py-[var(--spacing-section)] max-w-[1280px] mx-auto px-6">
-        <h1 className="text-display-md font-display tracking-display-md leading-display-md text-on-dark mb-2">
-          标签
-        </h1>
-        <p className="text-body text-muted mb-8">{decodeURIComponent(tag)}</p>
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <a
-              key={post.slug}
-              href={`/posts/${post.slug}`}
-              className="block bg-surface-card rounded-lg p-8 border border-hairline hover:border-hairline-strong transition-colors"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <time className="text-caption text-muted">
-                  {new Date(post.frontmatter.date).toLocaleDateString('zh-CN')}
-                </time>
-                {post.frontmatter.category && (
-                  <span className="text-caption-uppercase text-primary tracking-caption-uppercase">
-                    {post.frontmatter.category}
-                  </span>
-                )}
-              </div>
-              <h3 className="text-title-lg font-title-lg text-on-dark tracking-title-lg leading-title-lg">
-                {post.frontmatter.title}
-              </h3>
-            </a>
-          ))}
-        </div>
-      </section>
+      <PageTransition>
+        <section className="py-12 md:py-16 max-w-[1280px] mx-auto px-4 md:px-6">
+          {/* Header */}
+          <div className="mb-10">
+            <div className="flex items-center gap-2 font-mono text-xs text-muted-soft mb-4">
+              <span className="text-accent-emerald">$</span>
+              <a href="/" className="hover:text-primary transition-colors">~</a>
+              <span>/</span>
+              <a href="/tags" className="hover:text-primary transition-colors text-muted">tags</a>
+              <span>/</span>
+              <span className="text-primary/70">{decodedTag}</span>
+            </div>
+            <h1 className="font-mono text-display-sm md:text-display-md font-bold text-on-dark tracking-display-md leading-tight">
+              <span className="text-primary mr-3 opacity-50">#</span>
+              {decodedTag}
+            </h1>
+            <p className="font-mono text-sm text-muted mt-3">
+              <span className="text-accent-emerald">$</span>{' '}
+              共 <span className="text-primary">{posts.length}</span> 篇文章
+            </p>
+          </div>
+
+          {/* Post list */}
+          <TagPostList posts={posts} />
+        </section>
+      </PageTransition>
+
+      <Footer />
     </main>
   )
 }

@@ -11,6 +11,7 @@ const CACHE_KEY_TAGS = 'tags'
 const CACHE_KEY_CATEGORIES = 'categories'
 const CACHE_KEY_PAGE_INDEX = 'page_index'
 const CACHE_KEY_PAGE_PREFIX = 'page:'
+const CACHE_KEY_HTML_PREFIX = 'html:'
 const CACHE_KEY_MODE = 'mode'
 
 type DataSourceMode = 'github' | 'local'
@@ -21,6 +22,14 @@ function getMode(): DataSourceMode {
   const mode = process.env.GITHUB_REPO ? 'github' : 'local'
   cache.set(CACHE_KEY_MODE, mode)
   return mode
+}
+
+function getRepo(): string {
+  return process.env.GITHUB_REPO!
+}
+
+function getBranch(): string {
+  return process.env.GITHUB_BRANCH || 'main'
 }
 
 let configMemo: BlogConfig | null = null
@@ -37,16 +46,9 @@ export async function getConfig(): Promise<BlogConfig> {
   if (mode === 'local') {
     raw = local.readFileContent('config.yaml')
   } else {
-    raw = await github.fetchFileContent(
-      process.env.GITHUB_REPO!,
-      'config.yaml',
-      process.env.GITHUB_BRANCH || 'main',
-    )
+    raw = await github.fetchFileContent(getRepo(), 'config.yaml', getBranch())
   }
   const config = yaml.load(raw) as BlogConfig
-  if (mode === 'local') {
-    config.source = { repo: 'example', branch: 'local' }
-  }
   cache.set(CACHE_KEY_CONFIG, config)
   configMemo = config
   return config
@@ -55,13 +57,12 @@ export async function getConfig(): Promise<BlogConfig> {
 export async function getPageIndex(): Promise<PageIndex> {
   const cached = cache.get<PageIndex>(CACHE_KEY_PAGE_INDEX)
   if (cached) return cached
-  const config = await getConfig()
   const mode = getMode()
   let raw: string
   if (mode === 'local') {
     raw = local.readFileContent('pages/index.json')
   } else {
-    raw = await github.fetchFileContent(config.source.repo, 'pages/index.json', config.source.branch)
+    raw = await github.fetchFileContent(getRepo(), 'pages/index.json', getBranch())
   }
   const index = JSON.parse(raw) as PageIndex
   cache.set(CACHE_KEY_PAGE_INDEX, index)
@@ -71,13 +72,12 @@ export async function getPageIndex(): Promise<PageIndex> {
 export async function getPosts(): Promise<Post[]> {
   const cached = cache.get<Post[]>(CACHE_KEY_POSTS)
   if (cached) return cached
-  const config = await getConfig()
   const mode = getMode()
   let dirs: { name: string; path: string; type: string }[]
   if (mode === 'local') {
     dirs = local.readDirectory('posts')
   } else {
-    dirs = await github.fetchDirectory(config.source.repo, 'posts', config.source.branch)
+    dirs = await github.fetchDirectory(getRepo(), 'posts', getBranch())
   }
   const postDirs = dirs.filter((d) => d.type === 'dir')
   const posts = await Promise.all(
@@ -87,11 +87,7 @@ export async function getPosts(): Promise<Post[]> {
         if (mode === 'local') {
           raw = local.readFileContent(`${d.path}/index.md`)
         } else {
-          raw = await github.fetchFileContent(
-            config.source.repo,
-            `${d.path}/index.md`,
-            config.source.branch,
-          )
+          raw = await github.fetchFileContent(getRepo(), `${d.path}/index.md`, getBranch())
         }
         const { data, content } = matter(raw)
         const frontmatter = data as PostFrontmatter
@@ -160,7 +156,6 @@ export async function getPage(slug: string): Promise<Page | null> {
   const cacheKey = `${CACHE_KEY_PAGE_PREFIX}${slug}`
   const cached = cache.get<Page>(cacheKey)
   if (cached) return cached
-  const config = await getConfig()
   const pageIndex = await getPageIndex()
   const entry = pageIndex[slug] as PageEntry | undefined
   if (!entry) return null
@@ -169,11 +164,7 @@ export async function getPage(slug: string): Promise<Page | null> {
   if (mode === 'local') {
     raw = local.readFileContent(`pages/${entry.source}`)
   } else {
-    raw = await github.fetchFileContent(
-      config.source.repo,
-      `pages/${entry.source}`,
-      config.source.branch,
-    )
+    raw = await github.fetchFileContent(getRepo(), `pages/${entry.source}`, getBranch())
   }
   const { content } = matter(raw)
   const page: Page = { slug: entry.slug, title: entry.title, content }
@@ -181,7 +172,15 @@ export async function getPage(slug: string): Promise<Page | null> {
   return page
 }
 
-export function resolveImageUrl(config: BlogConfig, postSlug: string, imagePath: string): string {
+export async function getCachedHtml(key: string): Promise<string | null> {
+  return cache.get<string>(`${CACHE_KEY_HTML_PREFIX}${key}`)
+}
+
+export async function setCachedHtml(key: string, html: string): Promise<void> {
+  cache.set(`${CACHE_KEY_HTML_PREFIX}${key}`, html)
+}
+
+export function resolveImageUrl(postSlug: string, imagePath: string): string {
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath
   }
@@ -192,5 +191,5 @@ export function resolveImageUrl(config: BlogConfig, postSlug: string, imagePath:
   const relativePath = imagePath.startsWith('/')
     ? imagePath.slice(1)
     : `posts/${postSlug}/${imagePath}`
-  return github.buildRawUrl(config.source.repo, config.source.branch, relativePath)
+  return github.buildRawUrl(getRepo(), getBranch(), relativePath)
 }
