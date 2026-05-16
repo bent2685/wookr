@@ -33,7 +33,7 @@ export async function fetchFileContent(
     `/repos/${repo}/contents/${path}?ref=${branch}`,
   )
   if (data.encoding === 'base64') {
-    return atob(data.content.replace(/\n/g, ''))
+    return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8')
   }
   return data.content
 }
