@@ -1,0 +1,14 @@
+site:
+  title: My Blog
+  description: A blog powered by wookr
+  author: Your Name
+
+source:
+  repo: owner/repo
+  branch: main
+
+nav:
+  - about
+
+posts:
+  per_page: 10

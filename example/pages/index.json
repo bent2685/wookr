@@ -1,0 +1,12 @@
+{
+  "about": {
+    "slug": "about",
+    "title": "关于",
+    "source": "about.md"
+  },
+  "links": {
+    "slug": "links",
+    "title": "友情链接",
+    "source": "links.md"
+  }
+}

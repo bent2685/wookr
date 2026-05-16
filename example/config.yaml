@@ -1,0 +1,14 @@
+site:
+  title: Wookr Blog
+  description: 一个由 GitHub 仓库驱动的无后端博客
+  author: Wookr
+
+source:
+  repo: example
+  branch: main
+
+nav:
+  - about
+
+posts:
+  per_page: 10
