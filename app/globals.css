@@ -24,6 +24,9 @@
   --color-accent-emerald: #22c55e;
   --color-accent-rose: #ef4444;
   --color-accent-blue: #3b82f6;
+  --color-terminal-green: #00ff41;
+  --color-terminal-amber: #ffb000;
+  --color-terminal-dim: #1a1a2e;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
@@ -90,6 +93,479 @@
   --weight-nav-link: 500;
 }
 
+/* ============================================================
+   BASE / RESET
+   ============================================================ */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline-strong) transparent;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+body {
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   GRID BACKGROUND — subtle terminal grid
+   ============================================================ */
+
+.grid-bg {
+  background-image:
+    linear-gradient(var(--color-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-hairline) 1px, transparent 1px);
+  background-size: 60px 60px;
+  background-position: center center;
+}
+
+.grid-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, transparent 0%, var(--color-canvas) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================
+   SCANLINE OVERLAY — CRT monitor effect
+   ============================================================ */
+
+.scanline-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  animation: scanline-scroll 8s linear infinite;
+}
+
+@keyframes scanline-scroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* ============================================================
+   NEON GLOW — primary color glow effects
+   ============================================================ */
+
+.glow-primary {
+  text-shadow:
+    0 0 7px rgba(250, 255, 105, 0.3),
+    0 0 20px rgba(250, 255, 105, 0.15),
+    0 0 40px rgba(250, 255, 105, 0.05);
+}
+
+.glow-primary-strong {
+  text-shadow:
+    0 0 7px rgba(250, 255, 105, 0.6),
+    0 0 20px rgba(250, 255, 105, 0.3),
+    0 0 40px rgba(250, 255, 105, 0.15),
+    0 0 80px rgba(250, 255, 105, 0.05);
+}
+
+.glow-box {
+  box-shadow:
+    0 0 8px rgba(250, 255, 105, 0.15),
+    0 0 24px rgba(250, 255, 105, 0.05),
+    inset 0 1px 0 rgba(250, 255, 105, 0.05);
+}
+
+.glow-box-hover:hover {
+  box-shadow:
+    0 0 12px rgba(250, 255, 105, 0.25),
+    0 0 32px rgba(250, 255, 105, 0.1),
+    inset 0 1px 0 rgba(250, 255, 105, 0.1);
+}
+
+/* ============================================================
+   BLINKING CURSOR
+   ============================================================ */
+
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink::after {
+  content: "█";
+  color: var(--color-primary);
+  animation: cursor-blink 1s step-end infinite;
+  font-size: 0.9em;
+  margin-left: 2px;
+}
+
+.cursor-blink-dim::after {
+  content: "▌";
+  color: var(--color-muted);
+  animation: cursor-blink 1.2s step-end infinite;
+  font-size: 0.85em;
+  margin-left: 1px;
+}
+
+/* ============================================================
+   GLITCH EFFECT
+   ============================================================ */
+
+@keyframes glitch-1 {
+  0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  20% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, 1px); }
+  40% { clip-path: inset(50% 0 20% 0); transform: translate(2px, -1px); }
+  60% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 2px); }
+  80% { clip-path: inset(80% 0 5% 0); transform: translate(1px, -2px); }
+}
+
+@keyframes glitch-2 {
+  0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+  40% { clip-path: inset(20% 0 50% 0); transform: translate(-2px, 1px); }
+  60% { clip-path: inset(70% 0 10% 0); transform: translate(1px, -2px); }
+  80% { clip-path: inset(5% 0 80% 0); transform: translate(-1px, 2px); }
+}
+
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glitch::before {
+  color: var(--color-accent-rose);
+}
+
+.glitch::after {
+  color: var(--color-accent-blue);
+}
+
+.glitch:hover::before {
+  opacity: 0.8;
+  animation: glitch-1 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.glitch:hover::after {
+  opacity: 0.8;
+  animation: glitch-2 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ============================================================
+   TERMINAL WINDOW CHROME
+   ============================================================ */
+
+.terminal-window {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.terminal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--color-surface-elevated);
+  border-bottom: 1px solid var(--color-hairline);
+  user-select: none;
+}
+
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.terminal-dot-red { background: #ff5f57; }
+.terminal-dot-yellow { background: #ffbd2e; }
+.terminal-dot-green { background: #28c840; }
+
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  letter-spacing: 0.05em;
+}
+
+.terminal-body {
+  padding: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+  line-height: var(--leading-body);
+  color: var(--color-body);
+}
+
+.terminal-prompt {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.terminal-prompt::before {
+  content: "❯ ";
+  color: var(--color-accent-emerald);
+}
+
+.terminal-line-number {
+  display: inline-block;
+  width: 3ch;
+  text-align: right;
+  color: var(--color-muted-soft);
+  margin-right: 1.5ch;
+  user-select: none;
+  font-size: 0.8em;
+}
+
+/* ============================================================
+   TYPING ANIMATION
+   ============================================================ */
+
+@keyframes typing-cursor {
+  0%, 100% { border-right-color: var(--color-primary); }
+  50% { border-right-color: transparent; }
+}
+
+.typing-text {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--color-primary);
+  animation: typing-cursor 0.75s step-end infinite;
+}
+
+/* ============================================================
+   STATUS BAR — tmux-style bottom bar
+   ============================================================ */
+
+.status-bar {
+  background: var(--color-surface-elevated);
+  border-top: 1px solid var(--color-hairline);
+  padding: 4px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  letter-spacing: 0.03em;
+}
+
+.status-bar-segment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-emerald);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ============================================================
+   CARD SYSTEM — terminal-style cards
+   ============================================================ */
+
+.card-terminal {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-lg);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-terminal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-terminal:hover {
+  border-color: var(--color-hairline-strong);
+}
+
+.card-terminal:hover::before {
+  opacity: 0.5;
+}
+
+.card-terminal-glow:hover {
+  border-color: rgba(250, 255, 105, 0.3);
+  box-shadow: 0 0 20px rgba(250, 255, 105, 0.05);
+}
+
+.card-terminal-glow:hover::before {
+  opacity: 1;
+}
+
+/* ============================================================
+   TAG / BADGE — terminal-style
+   ============================================================ */
+
+.tag-terminal {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-xs);
+  padding: 2px 8px;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.tag-terminal:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: rgba(250, 255, 105, 0.05);
+}
+
+/* ============================================================
+   BUTTON — terminal-style
+   ============================================================ */
+
+.btn-terminal {
+  font-family: var(--font-mono);
+  font-size: var(--text-button);
+  font-weight: var(--weight-button);
+  padding: 8px 20px;
+  border-radius: var(--rounded-md);
+  border: 1px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  color: var(--color-on-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-terminal::before {
+  content: ">";
+  margin-right: 8px;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.btn-terminal:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-elevated);
+}
+
+.btn-terminal-primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-terminal-primary::before {
+  color: var(--color-on-primary);
+}
+
+.btn-terminal-primary:hover {
+  background: var(--color-primary-active);
+  border-color: var(--color-primary-active);
+}
+
+/* ============================================================
+   NAV — tmux-style navigation
+   ============================================================ */
+
+.nav-terminal {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.nav-link-terminal {
+  position: relative;
+  color: var(--color-muted);
+  padding: 4px 12px;
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-link-terminal::before {
+  content: "[";
+  margin-right: 2px;
+  color: var(--color-muted-soft);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nav-link-terminal::after {
+  content: "]";
+  margin-left: 2px;
+  color: var(--color-muted-soft);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nav-link-terminal:hover {
+  color: var(--color-primary);
+}
+
+.nav-link-terminal:hover::before,
+.nav-link-terminal:hover::after {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
+.nav-link-terminal-active {
+  color: var(--color-primary);
+  background: rgba(250, 255, 105, 0.05);
+  border-radius: var(--rounded-sm);
+}
+
+.nav-link-terminal-active::before,
+.nav-link-terminal-active::after {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
+/* ============================================================
+   PROSE — terminal-style markdown rendering
+   ============================================================ */
+
 .prose {
   --tw-prose-body: var(--color-body);
   --tw-prose-headings: var(--color-on-dark);
@@ -128,58 +604,191 @@
   --tw-prose-invert-pre-bg: var(--color-surface-card);
   --tw-prose-invert-th-borders: var(--color-hairline);
   --tw-prose-invert-td-borders: var(--color-hairline);
+  font-family: var(--font-mono);
 }
 
 .prose h1 {
+  font-family: var(--font-mono);
   font-size: var(--text-display-sm);
   font-weight: var(--weight-display);
   letter-spacing: var(--tracking-display-sm);
   line-height: var(--leading-display-sm);
   margin-top: 2.5rem;
   margin-bottom: 1.5rem;
+  color: var(--color-on-dark);
+  position: relative;
+}
+
+.prose h1::before {
+  content: "# ";
+  color: var(--color-primary);
+  font-weight: 400;
+  opacity: 0.6;
 }
 
 .prose h2 {
+  font-family: var(--font-mono);
   font-size: var(--text-title-lg);
   font-weight: var(--weight-title-lg);
   letter-spacing: var(--tracking-title-lg);
   line-height: var(--leading-title-lg);
   margin-top: 2rem;
   margin-bottom: 1rem;
+  color: var(--color-on-dark);
+  position: relative;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.prose h2::before {
+  content: "## ";
+  color: var(--color-primary);
+  font-weight: 400;
+  opacity: 0.5;
 }
 
 .prose h3 {
+  font-family: var(--font-mono);
   font-size: var(--text-title-md);
   font-weight: var(--weight-title-md);
   line-height: var(--leading-title-md);
   margin-top: 1.75rem;
   margin-bottom: 0.75rem;
+  color: var(--color-on-dark);
+}
+
+.prose h3::before {
+  content: "### ";
+  color: var(--color-primary);
+  font-weight: 400;
+  opacity: 0.4;
 }
 
 .prose h4 {
+  font-family: var(--font-mono);
   font-size: var(--text-title-sm);
   font-weight: var(--weight-title-sm);
   line-height: var(--leading-title-sm);
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
+  color: var(--color-on-dark);
 }
 
 .prose p {
   margin-top: 1.25em;
   margin-bottom: 1.25em;
   line-height: var(--leading-body);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
 }
 
 .prose a {
   color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.15s;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--color-primary);
+  padding-bottom: 1px;
+  transition: all 0.15s;
 }
 
 .prose a:hover {
   color: var(--color-primary-active);
+  border-bottom-style: solid;
+  text-shadow: 0 0 8px rgba(250, 255, 105, 0.3);
 }
+
+.prose ul,
+.prose ol {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.prose li::marker {
+  color: var(--color-primary);
+}
+
+.prose hr {
+  border-color: var(--color-hairline-strong);
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border-style: dashed;
+}
+
+.prose table {
+  width: 100%;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.prose thead {
+  border-bottom: 2px solid var(--color-hairline-strong);
+}
+
+.prose th {
+  color: var(--color-primary);
+  font-weight: var(--weight-title-sm);
+  padding: 0.5em 0.75em;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prose td {
+  padding: 0.5em 0.75em;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.prose img {
+  border-radius: var(--rounded-lg);
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  border: 1px solid var(--color-hairline);
+}
+
+.prose strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.prose em {
+  color: var(--color-body-strong);
+  font-style: italic;
+}
+
+.prose del {
+  color: var(--color-muted);
+  text-decoration-color: var(--color-muted);
+}
+
+.prose input[type="checkbox"] {
+  accent-color: var(--color-primary);
+}
+
+.prose .katex-display {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.prose .katex {
+  color: var(--color-on-dark);
+  font-size: 1.1em;
+}
+
+/* ============================================================
+   CODE BLOCK — terminal-style with window chrome
+   ============================================================ */
 
 .code-block {
   position: relative;
@@ -200,24 +809,40 @@
   background: var(--color-surface-elevated);
 }
 
+.code-block-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.code-block-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.code-block-dot-red { background: #ff5f57; }
+.code-block-dot-yellow { background: #ffbd2e; }
+.code-block-dot-green { background: #28c840; }
+
 .code-block-lang {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--color-muted);
   text-transform: lowercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .code-block-copy {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
   color: var(--color-muted);
   background: transparent;
   border: 1px solid var(--color-hairline-strong);
-  border-radius: var(--rounded-sm);
-  padding: 0.2rem 0.6rem;
+  border-radius: var(--rounded-xs);
+  padding: 0.15rem 0.5rem;
   cursor: pointer;
   transition: all 0.15s;
+  letter-spacing: 0.03em;
 }
 
 .code-block-copy:hover {
@@ -253,6 +878,17 @@
   font-family: var(--font-mono);
   font-size: var(--text-code);
   line-height: var(--leading-body);
+  position: relative;
+}
+
+.prose pre.shiki::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-hairline-strong), transparent);
 }
 
 .prose code {
@@ -266,6 +902,7 @@
   padding: 0.15em 0.35em;
   border-radius: var(--rounded-xs);
   font-size: var(--text-code);
+  border: 1px solid var(--color-hairline);
 }
 
 .prose pre code {
@@ -274,6 +911,7 @@
   padding: 0;
   border-radius: 0;
   font-size: inherit;
+  border: none;
 }
 
 .prose blockquote {
@@ -284,80 +922,158 @@
   margin-bottom: 1.5em;
   border-radius: 0 var(--rounded-md) var(--rounded-md) 0;
   font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.prose blockquote::before {
+  content: "│";
+  color: var(--color-primary);
+  position: absolute;
+  left: 0.5em;
+  opacity: 0.3;
 }
 
 .prose blockquote p {
   color: var(--color-body-strong);
+  padding-left: 1em;
 }
 
-.prose ul,
-.prose ol {
-  margin-top: 1.25em;
-  margin-bottom: 1.25em;
-  padding-left: 1.625em;
-}
+/* ============================================================
+   FOOTER — terminal-style
+   ============================================================ */
 
-.prose li {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
-
-.prose hr {
-  border-color: var(--color-hairline-strong);
-  margin-top: 2em;
-  margin-bottom: 2em;
-}
-
-.prose table {
-  width: 100%;
-  margin-top: 1.5em;
-  margin-bottom: 1.5em;
-}
-
-.prose thead {
-  border-bottom: 2px solid var(--color-hairline-strong);
-}
-
-.prose th {
-  color: var(--color-on-dark);
-  font-weight: var(--weight-title-sm);
-  padding: 0.5em 0.75em;
-  text-align: left;
-}
-
-.prose td {
-  padding: 0.5em 0.75em;
+.footer-terminal {
+  background: var(--color-surface-soft);
   border-top: 1px solid var(--color-hairline);
-}
-
-.prose img {
-  border-radius: var(--rounded-lg);
-  margin-top: 1.5em;
-  margin-bottom: 1.5em;
-}
-
-.prose strong {
-  color: var(--color-on-dark);
-  font-weight: 600;
-}
-
-.prose del {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--color-muted);
-  text-decoration-color: var(--color-muted);
+  position: relative;
 }
 
-.prose input[type="checkbox"] {
-  accent-color: var(--color-primary);
+.footer-terminal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  opacity: 0.3;
 }
 
-.prose .katex-display {
-  margin-top: 1.5em;
-  margin-bottom: 1.5em;
-  overflow-x: auto;
-  overflow-y: hidden;
+/* ============================================================
+   UTILITY ANIMATIONS
+   ============================================================ */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.prose .katex {
-  color: var(--color-on-dark);
-  font-size: 1.1em;
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes text-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes border-scan {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.border-scan {
+  background: linear-gradient(90deg, var(--color-hairline), var(--color-primary), var(--color-hairline));
+  background-size: 200% 100%;
+  animation: border-scan 3s linear infinite;
+}
+
+/* ============================================================
+   SCROLLBAR — custom terminal-style
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-hairline-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-soft);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .prose h1 {
+    font-size: 1.75rem;
+    letter-spacing: -0.5px;
+  }
+
+  .prose h2 {
+    font-size: 1.25rem;
+  }
+
+  .terminal-body {
+    padding: 1rem;
+  }
 }

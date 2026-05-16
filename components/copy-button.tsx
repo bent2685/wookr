@@ -13,7 +13,7 @@ export function CopyButtonScript() {
         await navigator.clipboard.writeText(text)
         const el = btn as HTMLElement
         const original = el.textContent || ''
-        el.textContent = '已复制'
+        el.textContent = '✓ copied'
         el.classList.add('copied')
         setTimeout(() => {
           el.textContent = original

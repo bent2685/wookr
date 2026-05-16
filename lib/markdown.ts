@@ -74,7 +74,7 @@ function wrapCodeBlocks(html: string, langs: string[]): string {
     const codeStart = preTag.indexOf('>', preTag.indexOf('<pre'))
     const innerContent = preTag.slice(codeStart + 1, preTag.length - '</pre>'.length)
 
-    result += `<div class="code-block"><div class="code-block-header"><span class="code-block-lang">${lang}</span><button class="code-block-copy" data-copy>复制</button></div><pre class="${classes}"${style ? ` style="${style}"` : ''} tabindex="0">${innerContent}</pre></div>`
+    result += `<div class="code-block"><div class="code-block-header"><div class="code-block-dots"><span class="code-block-dot code-block-dot-red"></span><span class="code-block-dot code-block-dot-yellow"></span><span class="code-block-dot code-block-dot-green"></span></div><span class="code-block-lang">${lang}</span><button class="code-block-copy" data-copy>copy</button></div><pre class="${classes}"${style ? ` style="${style}"` : ''} tabindex="0">${innerContent}</pre></div>`
 
     searchFrom = preEnd + '</pre>'.length
   }
